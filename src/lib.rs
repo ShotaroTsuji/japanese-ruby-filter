@@ -22,3 +22,5 @@
 //!
 //! In the example above, a ruby character `ぶ` corresponeds to a base character `武`.
 //! Ruby characters `しょはっと` correspond to `諸法度`.
+
+pub mod latex_like;

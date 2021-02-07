@@ -114,6 +114,15 @@ mod test {
     }
 
     #[test]
+    fn parse_unclosed_argument() {
+        let mut args = Arguments::new("{漢字}{かんじです");
+        assert_eq!(args.next(), Some("漢字"));
+        assert_eq!(args.next(), None);
+        assert_eq!(args.next(), None);
+        assert_eq!(args.into_inner(), "{かんじです");
+    }
+
+    #[test]
     fn take_exact_two_arguments() {
         let s = "{漢字}{かんじ}です";
         assert_eq!(take_exact_n_args(s, 2), Some((vec!["漢字", "かんじ"], "です")));
@@ -123,5 +132,11 @@ mod test {
     fn take_exact_three_arguments() {
         let s = "{a}{b}{c}def";
         assert_eq!(take_exact_n_args(s, 3), Some((vec!["a", "b", "c"], "def")));
+    }
+
+    #[test]
+    fn take_two_from_three_arguments() {
+        let s = "{a}{b}{c}def";
+        assert_eq!(take_exact_n_args(s, 2), None);
     }
 }
