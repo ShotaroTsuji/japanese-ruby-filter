@@ -17,7 +17,7 @@ fn match_macro_name(s: &str) -> (Option<&str>, &str) {
     (Some(&s[1..]), "")
 }
 
-fn take_exact_n_args(s: &str, n: usize) -> Option<(Vec<&str>, &str)> {
+fn take_n_args(s: &str, n: usize) -> Option<(Vec<&str>, &str)> {
     let mut iter = Arguments::new(s);
     let mut v = Vec::with_capacity(n);
 
@@ -25,10 +25,7 @@ fn take_exact_n_args(s: &str, n: usize) -> Option<(Vec<&str>, &str)> {
         v.push(iter.next()?);
     }
 
-    match iter.next() {
-        Some(_) => None,
-        None => Some((v, iter.into_inner())),
-    }
+    Some((v, iter.into_inner()))
 }
 
 #[derive(Debug,Clone)]
@@ -123,20 +120,20 @@ mod test {
     }
 
     #[test]
-    fn take_exact_two_arguments() {
+    fn take_two_arguments() {
         let s = "{漢字}{かんじ}です";
-        assert_eq!(take_exact_n_args(s, 2), Some((vec!["漢字", "かんじ"], "です")));
+        assert_eq!(take_n_args(s, 2), Some((vec!["漢字", "かんじ"], "です")));
     }
 
     #[test]
-    fn take_exact_three_arguments() {
+    fn take_three_arguments() {
         let s = "{a}{b}{c}def";
-        assert_eq!(take_exact_n_args(s, 3), Some((vec!["a", "b", "c"], "def")));
+        assert_eq!(take_n_args(s, 3), Some((vec!["a", "b", "c"], "def")));
     }
 
     #[test]
     fn take_two_from_three_arguments() {
         let s = "{a}{b}{c}def";
-        assert_eq!(take_exact_n_args(s, 2), None);
+        assert_eq!(take_n_args(s, 2), Some((vec!["a", "b"], "{c}def")));
     }
 }
