@@ -32,9 +32,14 @@ impl<'a> Iterator for LatexLikeFilter<'a> {
         let arity_table = [("ruby", 2usize)];
         match take_next_command(self.slice, &arity_table[..]) {
             Some((before, command, after)) => {
-                self.ruby.replace(execute_command_ruby(command));
-                self.slice = after;
-                return Some(Filtered::Plain(before));
+                if before.is_empty() {
+                    self.slice = after;
+                    return Some(Filtered::Ruby(execute_command_ruby(command)));
+                } else {
+                    self.ruby.replace(execute_command_ruby(command));
+                    self.slice = after;
+                    return Some(Filtered::Plain(before));
+                }
             },
             None => {
                 let ret = self.slice;
@@ -288,6 +293,19 @@ mod test {
         assert_eq!(iter.next(), Some(Filtered::Plain("Hello, ")));
         assert_eq!(iter.next(), Some(Filtered::Ruby(Ruby::from_str_vecs(vec!["世", "界"], vec!["せ", "かい"]))));
         assert_eq!(iter.next(), Some(Filtered::Plain("!!")));
+        assert_eq!(iter.next(), None);
+    }
+
+    #[test]
+    fn filter_text2() {
+        let s = "\\ruby{大名}{だい|みょう}は\\ruby{武|家|諸|法度}{ぶ|け|しょ|はっと}などによる統制を受けた。";
+        let ruby1 = Ruby::from_str_vecs(vec!["大", "名"], vec!["だい", "みょう"]);
+        let ruby2 = Ruby::from_str_vecs(vec!["武", "家", "諸", "法度"], vec!["ぶ", "け", "しょ", "はっと"]);
+        let mut iter = LatexLikeFilter::new(s);
+        assert_eq!(iter.next(), Some(Filtered::Ruby(ruby1)));
+        assert_eq!(iter.next(), Some(Filtered::Plain("は")));
+        assert_eq!(iter.next(), Some(Filtered::Ruby(ruby2)));
+        assert_eq!(iter.next(), Some(Filtered::Plain("などによる統制を受けた。")));
         assert_eq!(iter.next(), None);
     }
 
