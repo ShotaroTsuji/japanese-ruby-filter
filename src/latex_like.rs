@@ -1,6 +1,89 @@
+use std::borrow::Cow;
+use thiserror::Error;
+use crate::{Filtered, Ruby};
+
 #[derive(Debug,Clone)]
-pub struct LatexLike<'a> {
+pub struct LatexLikeFilter<'a> {
     slice: &'a str,
+    ruby: Option<Ruby<'a>>,
+}
+
+impl<'a> LatexLikeFilter<'a> {
+    pub fn new(s: &'a str) -> Self {
+        Self {
+            slice: s,
+            ruby: None,
+        }
+    }
+}
+
+impl<'a> Iterator for LatexLikeFilter<'a> {
+    type Item = Filtered<'a>;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if let Some(ruby) = self.ruby.take() {
+            return Some(Filtered::Ruby(ruby));
+        }
+
+        if self.slice.is_empty() {
+            return None;
+        }
+
+        let arity_table = [("ruby", 2usize)];
+        match take_next_command(self.slice, &arity_table[..]) {
+            Some((before, command, after)) => {
+                self.ruby.replace(execute_command_ruby(command));
+                self.slice = after;
+                return Some(Filtered::Plain(before));
+            },
+            None => {
+                let ret = self.slice;
+                self.slice = "";
+                return Some(Filtered::Plain(ret));
+            },
+        }
+    }
+}
+
+#[derive(Debug,Clone,Error,PartialEq)]
+enum RubyError {
+    #[error("the number of groups does not match: base = {0}, ruby = {1}")]
+    NumberMismatch(usize, usize),
+}
+
+fn execute_command_ruby<'a>(cmd: Command<'a>) -> Ruby<'a> {
+    assert_eq!(cmd.name, "ruby");
+
+    match command_ruby(cmd.args[0], cmd.args[1]) {
+        Ok(ruby) => ruby,
+        Err(RubyError::NumberMismatch(1, _)) => {
+            make_ruby_for_each_char(cmd.args[0], cmd.args[1])
+                .expect("Ruby command error")
+        },
+        Err(_) => panic!("Ruby command error"),
+    }
+}
+
+fn make_ruby_for_each_char<'a>(base: &'a str, ruby: &'a str) -> Result<Ruby<'a>, RubyError> {
+    let base_groups: Vec<&str> = base.split("").filter(|s| !s.is_empty()).collect();
+    let ruby_groups: Vec<&str> = ruby.split('|').collect();
+
+    if base_groups.len() == ruby_groups.len() {
+        Ok(Ruby::from_str_vecs(base_groups, ruby_groups))
+    } else {
+        Err(RubyError::NumberMismatch(base_groups.len(), ruby_groups.len()))
+    }
+}
+
+fn command_ruby<'a>(base: &'a str, ruby: &'a str) -> Result<Ruby<'a>, RubyError> {
+    let base_groups: Vec<&str> = base.split('|').collect();
+    let ruby_groups: Vec<&str> = ruby.split('|').collect();
+
+    if base_groups.len() == ruby_groups.len() {
+        Ok(Ruby::from_str_vecs(base_groups, ruby_groups))
+    } else {
+        Err(RubyError::NumberMismatch(base_groups.len(), ruby_groups.len()))
+    }
 }
 
 pub trait ArityTable {
@@ -197,6 +280,55 @@ fn find_close_brace(s: &str) -> Option<usize> {
 #[cfg(test)]
 mod test {
     use super::*;
+
+    #[test]
+    fn filter_text1() {
+        let s = "Hello, \\ruby{世|界}{せ|かい}!!";
+        let mut iter = LatexLikeFilter::new(s);
+        assert_eq!(iter.next(), Some(Filtered::Plain("Hello, ")));
+        assert_eq!(iter.next(), Some(Filtered::Ruby(Ruby::from_str_vecs(vec!["世", "界"], vec!["せ", "かい"]))));
+        assert_eq!(iter.next(), Some(Filtered::Plain("!!")));
+        assert_eq!(iter.next(), None);
+    }
+
+    #[test]
+    fn filter_tailing_ruby() {
+        let s = "これは\\ruby{鶏}{にわとり}";
+        let mut iter = LatexLikeFilter::new(s);
+        assert_eq!(iter.next(), Some(Filtered::Plain("これは")));
+        assert_eq!(iter.next(), Some(Filtered::Ruby(Ruby::from_str_vecs(vec!["鶏"], vec!["にわとり"]))));
+        assert_eq!(iter.next(), None);
+    }
+
+    #[test]
+    fn ruby_of_two_groups() {
+        let base = "小|早川";
+        let ruby = "こ|ばやかわ";
+        let expected = Ruby {
+            base: vec![Cow::Borrowed("小"), Cow::Borrowed("早川")],
+            ruby: vec![Cow::Borrowed("こ"), Cow::Borrowed("ばやかわ")],
+        };
+        assert_eq!(command_ruby(base, ruby), Ok(expected));
+    }
+
+    #[test]
+    fn ruby_of_one_base_group() {
+        let base = "最高";
+        let ruby = "さい|こう";
+        let expected = RubyError::NumberMismatch(1, 2);
+        assert_eq!(command_ruby(base, ruby), Err(expected));
+    }
+
+    #[test]
+    fn ruby_of_each_char() {
+        let base = "最高";
+        let ruby = "さい|こう";
+        let expected = Ruby {
+            base: vec![Cow::Borrowed("最"), Cow::Borrowed("高")],
+            ruby: vec![Cow::Borrowed("さい"), Cow::Borrowed("こう")],
+        };
+        assert_eq!(make_ruby_for_each_char(base, ruby), Ok(expected));
+    }
 
     #[test]
     fn match_ruby_macro() {

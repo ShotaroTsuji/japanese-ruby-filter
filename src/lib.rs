@@ -23,4 +23,27 @@
 //! In the example above, a ruby character `ぶ` corresponeds to a base character `武`.
 //! Ruby characters `しょはっと` correspond to `諸法度`.
 
+use std::borrow::Cow;
+
 pub mod latex_like;
+
+#[derive(Debug,Clone,PartialEq)]
+pub enum Filtered<'a> {
+    Plain(&'a str),
+    Ruby(Ruby<'a>),
+}
+
+#[derive(Debug,Clone,PartialEq)]
+pub struct Ruby<'a> {
+    base: Vec<Cow<'a, str>>,
+    ruby: Vec<Cow<'a, str>>,
+}
+
+impl<'a> Ruby<'a> {
+    pub fn from_str_vecs(base: Vec<&'a str>, ruby: Vec<&'a str>) -> Ruby<'a> {
+        Ruby {
+            base: base.into_iter().map(|s| Cow::Borrowed(s)).collect(),
+            ruby: ruby.into_iter().map(|s| Cow::Borrowed(s)).collect(),
+        }
+    }
+}
