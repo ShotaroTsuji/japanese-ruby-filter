@@ -27,6 +27,9 @@ use std::borrow::Cow;
 
 pub mod latex_like;
 
+#[cfg(feature = "pulldown-cmark-filter")]
+pub mod pulldown_cmark_filter;
+
 #[derive(Debug,Clone,PartialEq)]
 pub enum Filtered<'a> {
     Plain(&'a str),
