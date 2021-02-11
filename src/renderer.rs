@@ -46,13 +46,24 @@ impl HtmlRenderer {
 mod test {
     use super::*;
 
+    fn render_ruby(input: &Ruby) -> String {
+        let mut output = String::new();
+        HtmlRenderer::new().render(&input, &mut output);
+
+        output
+    }
+
     #[test]
     fn simple_ruby_to_html() {
         let input = Ruby::from_str_vecs(vec!["漢", "字"], vec!["かん", "じ"]);
         let expected = "<ruby>漢<rp>（</rp><rt>かん</rt><rp>）</rp>字<rp>（</rp><rt>じ</rt><rp>）</rp></ruby>";
-        let r = HtmlRenderer::new();
-        let mut output = String::new();
-        r.render(&input, &mut output);
-        assert_eq!(output.as_str(), expected);
+        assert_eq!(render_ruby(&input).as_str(), expected);
+    }
+
+    #[test]
+    fn one_group_ruby_to_html() {
+        let input = Ruby::from_str_vecs(vec!["境界"], vec!["フロンティア"]);
+        let expected = "<ruby>境界<rp>（</rp><rt>フロンティア</rt><rp>）</rp></ruby>";
+        assert_eq!(render_ruby(&input).as_str(), expected);
     }
 }
