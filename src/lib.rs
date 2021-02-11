@@ -26,6 +26,7 @@
 use std::borrow::Cow;
 
 pub mod latex_like;
+pub mod renderer;
 
 #[cfg(feature = "pulldown-cmark-filter")]
 pub mod pulldown_cmark_filter;
@@ -48,5 +49,13 @@ impl<'a> Ruby<'a> {
             base: base.into_iter().map(|s| Cow::Borrowed(s)).collect(),
             ruby: ruby.into_iter().map(|s| Cow::Borrowed(s)).collect(),
         }
+    }
+
+    pub fn base(&self) -> &[Cow<'a, str>] {
+        self.base.as_slice()
+    }
+
+    pub fn ruby(&self) -> &[Cow<'a, str>] {
+        self.ruby.as_slice()
     }
 }
