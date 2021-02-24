@@ -145,7 +145,6 @@ fn parse_command<'a, T: ArityTable + ?Sized>(s: &'a str, arity_table: &T) -> Res
         },
     };
     let name = &s[1..cmd_name_end];
-    eprintln!("# Command name: {}", name);
 
     let arity = match arity_table.get_arity(name) {
         Some(arity) => arity,
@@ -245,16 +244,13 @@ impl<'a> Iterator for Arguments<'a> {
 
     fn next(&mut self) -> Option<Self::Item> {
         let s = &self.s[self.head..];
-        eprintln!("s = {}", s);
+
         if !s.starts_with('{') {
             return None;
         }
 
         let end = find_close_brace(s)?;
-        eprintln!("end = {}", end);
-
         let arg = &s[1..end];
-        eprintln!("arg = {}", arg);
 
         self.head = self.head + end + 1;
 

@@ -38,7 +38,6 @@ where
         match self.iter.next() {
             Some(Event::Text(s)) => {
                 for filtered in LatexLikeFilter::new(&s) {
-                    eprintln!("{:?}", filtered);
                     match filtered {
                         Filtered::Plain(s) => {
                             let s = s.to_owned();
