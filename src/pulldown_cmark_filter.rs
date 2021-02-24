@@ -5,13 +5,13 @@ use crate::latex_like::LatexLikeFilter;
 use crate::renderer::HtmlRenderer;
 
 #[derive(Debug)]
-pub struct Filter<'a, I> {
+pub struct RubyFilter<'a, I> {
     iter: I,
     renderer: HtmlRenderer,
     queue: VecDeque<Event<'a>>,
 }
 
-impl<'a, I> Filter<'a, I>
+impl<'a, I> RubyFilter<'a, I>
 where
     I: Iterator<Item=Event<'a>>,
 {
@@ -24,7 +24,7 @@ where
     }
 }
 
-impl<'a, I> Iterator for Filter<'a, I>
+impl<'a, I> Iterator for RubyFilter<'a, I>
 where
     I: Iterator<Item=Event<'a>>,
 {
@@ -74,7 +74,7 @@ r#"## 章題
 これは\ruby{漢字}{かん|じ}にルビをつける機能です。"#;
 
         let parser = pulldown_cmark::Parser::new(s);
-        let mut filter = Filter::new(parser);
+        let mut filter = RubyFilter::new(parser);
         assert_eq!(filter.next(), Some(Event::Start(Tag::Heading(2))));
         assert_eq!(filter.next(), Some(Event::Text("章題".into())));
         assert_eq!(filter.next(), Some(Event::End(Tag::Heading(2))));

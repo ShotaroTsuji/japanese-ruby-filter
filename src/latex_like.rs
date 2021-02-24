@@ -1,4 +1,3 @@
-use std::borrow::Cow;
 use thiserror::Error;
 use crate::{Filtered, Ruby};
 
@@ -281,6 +280,7 @@ fn find_close_brace(s: &str) -> Option<usize> {
 #[cfg(test)]
 mod test {
     use super::*;
+    use std::borrow::Cow;
 
     #[test]
     fn filter_text1() {
