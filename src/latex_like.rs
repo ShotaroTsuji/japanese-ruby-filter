@@ -194,20 +194,6 @@ fn parse_command_name(s: &str) -> Option<usize> {
     Some(s.len())
 }
 
-fn match_macro_name(s: &str) -> (Option<&str>, &str) {
-    if !s.starts_with('\\') {
-        return (None, s);
-    }
-
-    for (index, c) in s.char_indices().skip(1) {
-        if !c.is_ascii_alphanumeric() {
-            return (Some(&s[1..index]), &s[index..]);
-        }
-    }
-
-    (Some(&s[1..]), "")
-}
-
 #[derive(Debug,Clone)]
 pub struct Arguments<'a> {
     s: &'a str,
@@ -342,12 +328,6 @@ mod test {
             ruby: vec![Cow::Borrowed("さい"), Cow::Borrowed("こう")],
         };
         assert_eq!(make_ruby_for_each_char(base, ruby), Ok(expected));
-    }
-
-    #[test]
-    fn match_ruby_macro() {
-        let s = "\\ruby{漢字}{かんじ}";
-        assert_eq!(match_macro_name(s), (Some("ruby"), "{漢字}{かんじ}"));
     }
 
     #[test]
