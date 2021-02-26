@@ -4,6 +4,7 @@ version = "0.1.0"
 authors = ["Shotaro Tsuji <Shotaro.Tsuji@gmail.com>"]
 edition = "2018"
 repository = "https://github.com/ShotaroTsuji/japanese-ruby-filter"
+license = "Apache-2.0/MIT"
 categories = ["text-processing"]
 keywords = ["japanese-ruby"]
 
