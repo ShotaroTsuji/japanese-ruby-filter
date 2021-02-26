@@ -6,6 +6,9 @@ edition = "2018"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
+[package.metadata.docs.rs]
+all-features = true
+
 [features]
 # Cargo says the following message:
 #   Features and dependencies cannot have the same name: `pulldown-cmark`.
