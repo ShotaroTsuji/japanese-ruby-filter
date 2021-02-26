@@ -1,6 +1,20 @@
+//! LaTeX-like ruby filter
+//!
+//! ## Example
+//! ```
+//! use japanese_ruby_filter::{Ruby, Filtered};
+//! use japanese_ruby_filter::latex_like::LatexLikeFilter;
+//!
+//! let mut iter = LatexLikeFilter::new("これは\\ruby{漢字}{かん|じ}のルビです。");
+//! assert_eq!(iter.next(), Some(Filtered::Plain("これは".into())));
+//! assert_eq!(iter.next(), Some(Filtered::Ruby(Ruby::from_str_vecs(vec!["漢", "字"], vec!["かん", "じ"]))));
+//! assert_eq!(iter.next(), Some(Filtered::Plain("のルビです。".into())));
+//! ```
+
 use thiserror::Error;
 use crate::{Filtered, Ruby};
 
+/// An interator which parses LaTeX like ruby commands
 #[derive(Debug,Clone)]
 pub struct LatexLikeFilter<'a> {
     slice: &'a str,
@@ -90,7 +104,7 @@ fn command_ruby<'a>(base: &'a str, ruby: &'a str) -> Result<Ruby<'a>, RubyError>
     }
 }
 
-pub trait ArityTable {
+trait ArityTable {
     fn get_arity<S: AsRef<str>>(&self, name: S) -> Option<usize>;
 }
 
@@ -109,7 +123,7 @@ impl ArityTable for [(&str, usize)] {
 }
 
 #[derive(Debug,Clone,PartialEq)]
-pub struct Command<'a> {
+struct Command<'a> {
     name: &'a str,
     args: Vec<&'a str>,
 }
@@ -195,7 +209,7 @@ fn parse_command_name(s: &str) -> Option<usize> {
 }
 
 #[derive(Debug,Clone)]
-pub struct Arguments<'a> {
+struct Arguments<'a> {
     s: &'a str,
     head: usize,
 }
